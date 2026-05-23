@@ -4,9 +4,9 @@ title: IMS Bearing Data로 RUL 예측하기
 
 # IMS Bearing Data로 RUL 예측하기
 
-한양대학교 딥러닝 수업 기말 과제로 IMS Bearing Data를 사용해 베어링의 [RUL(Remaining Useful Life)](../CONCEPTS_FOR_BEGINNERS.md#concept-rul)을 예측했다. 처음에는 원본 데이터와 PDF를 봐도 “어느 시점이 고장인지”, “RUL 정답을 어디서 얻는지”, “왜 [RMS](../CONCEPTS_FOR_BEGINNERS.md#concept-rms)나 [FFT](../CONCEPTS_FOR_BEGINNERS.md#concept-fft) 같은 [feature](../CONCEPTS_FOR_BEGINNERS.md#concept-feature)를 뽑는지”가 명확하지 않았다.
+한양대학교 딥러닝 수업 기말 과제로 IMS Bearing Data를 사용해 베어링의 [RUL(Remaining Useful Life)](concepts.html#concept-rul)을 예측했다. 처음에는 원본 데이터와 PDF를 봐도 “어느 시점이 고장인지”, “RUL 정답을 어디서 얻는지”, “왜 [RMS](concepts.html#concept-rms)나 [FFT](concepts.html#concept-fft) 같은 [feature](concepts.html#concept-feature)를 뽑는지”가 명확하지 않았다.
 
-이 글은 그 혼란을 정리하면서, 원본 진동 데이터에서 feature를 만들고, RUL 라벨을 직접 생성한 뒤, 비교 기준 모델과 [PyTorch GRU/LSTM 모델](../CONCEPTS_FOR_BEGINNERS.md#concept-gru-lstm)을 비교한 과정을 기록한다.
+이 글은 그 혼란을 정리하면서, 원본 진동 데이터에서 feature를 만들고, RUL 라벨을 직접 생성한 뒤, 비교 기준 모델과 [PyTorch GRU/LSTM 모델](concepts.html#concept-gru-lstm)을 비교한 과정을 기록한다.
 
 용어가 낯설면 링크가 걸린 첫 등장 용어를 눌러 개념 설명을 확인하면 된다.
 
@@ -92,8 +92,8 @@ RUL 정답을 어떻게 만들 것인가
 
 이번 프로젝트에서는 시간 영역, 상태 지표, 주파수 영역 feature를 함께 사용했다. 서로 다른 관점에서 베어링 진동 상태를 보기 위해서다.
 
-- 시간 영역 feature: RMS, standard deviation, peak-to-peak, skewness, [kurtosis](../CONCEPTS_FOR_BEGINNERS.md#concept-kurtosis)
-- 상태 지표 feature: [crest factor](../CONCEPTS_FOR_BEGINNERS.md#concept-crest-factor), impulse factor, shape factor
+- 시간 영역 feature: RMS, standard deviation, peak-to-peak, skewness, [kurtosis](concepts.html#concept-kurtosis)
+- 상태 지표 feature: [crest factor](concepts.html#concept-crest-factor), impulse factor, shape factor
 - 주파수 영역 feature: FFT total power, dominant frequency, spectral centroid, band energy
 
 여기서 feature는 딥러닝 모델이 학습 과정에서 자동으로 만든 값이 아니라, 사전에 정의한 공식으로 원본 진동 신호를 요약한 값이다.
@@ -132,7 +132,7 @@ rul_step = total_files - 1 - current_step
 마지막 파일       step = 983 -> rul_step = 0
 ```
 
-또한 너무 먼 초기 RUL을 그대로 예측하게 하면 학습이 어려울 수 있어서 [capped RUL](../CONCEPTS_FOR_BEGINNERS.md#concept-capped-rul)도 만들었다.
+또한 너무 먼 초기 RUL을 그대로 예측하게 하면 학습이 어려울 수 있어서 [capped RUL](concepts.html#concept-capped-rul)도 만들었다.
 
 ```python
 rul_capped_125 = min(rul_step, 125)
@@ -163,7 +163,7 @@ rul_capped_125 = min(rul_step, 125)
 
 고장나지 않은 베어링은 제외했다. 이유는 RUL이 “고장까지 남은 시간”인데, 실험 끝까지 고장나지 않은 베어링은 정확한 고장 시점을 알 수 없기 때문이다.
 
-최종 평가는 [train/test split](../CONCEPTS_FOR_BEGINNERS.md#concept-split-validation) 중 `by_experiment` split을 사용했다.
+최종 평가는 [train/test split](concepts.html#concept-split-validation) 중 `by_experiment` split을 사용했다.
 
 ```text
 train:
@@ -179,7 +179,7 @@ test:
 
 ## 6. 비교 기준 모델
 
-딥러닝 모델을 바로 평가하면 성능의 의미를 판단하기 어렵다. 그래서 먼저 [baseline, 즉 비교 기준 모델](../CONCEPTS_FOR_BEGINNERS.md#concept-baseline-models)을 만들었다. 여기서 baseline은 최종 모델이 좋은지 나쁜지 판단하기 위한 기준이라는 뜻이다.
+딥러닝 모델을 바로 평가하면 성능의 의미를 판단하기 어렵다. 그래서 먼저 [baseline, 즉 비교 기준 모델](concepts.html#concept-baseline-models)을 만들었다. 여기서 baseline은 최종 모델이 좋은지 나쁜지 판단하기 위한 기준이라는 뜻이다.
 
 Dummy, RandomForest, MLP가 모든 과제에서 반드시 쓰는 정답 조합은 아니다. 이 프로젝트에서는 “아무것도 배우지 않는 모델”, “feature 표에서 강한 전통 머신러닝 모델”, “간단한 신경망”을 차례로 비교하기 위해 선택했다.
 
@@ -194,7 +194,7 @@ MLPRegressor:
 한 시점 feature를 입력으로 쓰는 간단한 신경망
 ```
 
-`by_experiment` split 결과는 다음과 같다. [MAE, RMSE, R2](../CONCEPTS_FOR_BEGINNERS.md#concept-metrics)는 예측이 얼마나 맞았는지 보는 평가 지표다.
+`by_experiment` split 결과는 다음과 같다. [MAE, RMSE, R2](concepts.html#concept-metrics)는 예측이 얼마나 맞았는지 보는 평가 지표다.
 
 | Model | MAE | RMSE | R2 |
 |---|---:|---:|---:|
