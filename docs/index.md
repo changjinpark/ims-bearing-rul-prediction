@@ -141,7 +141,11 @@ rul_step = total_files - 1 - current_step
 rul_capped_125 = min(rul_step, 125)
 ```
 
-즉 고장까지 아주 많이 남은 초반 구간은 모두 125로 묶고, 마지막 125개 step에서만 RUL이 감소하도록 만들었다.
+이번 최종 실험에서는 raw `rul_step`이 아니라 `rul_capped_125`를 target으로 사용했다.
+
+이유는 초기 정상 구간의 RUL이 너무 크고, 그 구간에서는 진동 feature 변화가 작기 때문이다. raw RUL을 그대로 쓰면 모델이 긴 정상 구간의 큰 숫자를 맞추는 데 학습이 치우칠 수 있다. 반대로 고장에 가까운 후반부처럼 실제로 feature 변화가 커지는 구간을 잘 따라가는지가 RUL 예측에서 더 중요하다.
+
+따라서 `rul_capped_125`는 고장까지 충분히 많이 남은 구간은 모두 125로 보고, 마지막 125 step에서 감소하는 패턴을 학습하게 만든 label이다. 이 값은 실제 시간 단위 RUL이 아니라 capped RUL step이다.
 
 ## 5. 데이터 선택과 실험 분리
 
@@ -244,6 +248,8 @@ GRU와 LSTM은 둘 다 시계열 흐름을 다루는 딥러닝 모델이다. LST
 ## 8. 최종 결과
 
 같은 `by_experiment` split에서 모델 성능을 비교하면 다음과 같다.
+
+아래 성능은 모두 `rul_capped_125`를 target으로 계산했다. 따라서 MAE와 RMSE는 시간 단위 오차가 아니라 capped RUL step 기준 오차다.
 
 | Model | MAE | RMSE | R2 |
 |---|---:|---:|---:|
