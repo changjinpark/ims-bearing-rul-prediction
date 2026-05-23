@@ -13,6 +13,24 @@ title: IMS Bearing Data로 RUL 예측하기
 
 전체 소스 코드는 [GitHub 저장소](https://github.com/changjinpark/ims-bearing-rul-prediction)에서 확인할 수 있다.
 
+## 목차
+
+1. [문제 정의](#problem)
+2. [먼저 정리해야 했던 것](#preparation)
+3. [Feature 추출](#feature-extraction)
+4. [RUL 라벨 생성](#rul-labeling)
+5. [데이터 선택과 실험 분리](#data-split)
+6. [비교 기준 모델](#baseline-models)
+7. [PyTorch GRU와 LSTM 모델](#sequence-models)
+8. [최종 결과](#results)
+9. [한계](#limitations)
+10. [성능 개선 방향](#future-work)
+11. [실행 환경](#environment)
+12. [결론](#conclusion)
+13. [코드](#code)
+
+<a id="problem"></a>
+
 ## 1. 문제 정의
 
 IMS Bearing Data는 베어링을 고장 날 때까지 운전하며 진동을 측정한 test-to-failure 데이터다. 일반적인 표 형태 데이터처럼 처음부터 “정답 라벨”이 깔끔하게 주어지는 구조가 아니다.
@@ -38,6 +56,8 @@ IMS Bearing Data는 베어링을 고장 날 때까지 운전하며 진동을 측
 마지막 고장 시점을 기준으로 RUL 라벨을 만들어,
 현재 시점의 남은 수명을 예측한다.
 ```
+
+<a id="preparation"></a>
 
 ## 2. 먼저 정리해야 했던 것
 
@@ -89,6 +109,8 @@ RUL 정답을 어떻게 만들 것인가
 
 즉 2장은 어떤 데이터를 어떤 순서로 사용할지 정리한 단계다. 그 다음 3장에서는 선택한 파일 하나하나를 모델 입력으로 쓰기 위해 feature로 바꾸는 과정을 설명하고, 4장에서는 RUL 라벨을 만드는 기준을 설명한다.
 
+<a id="feature-extraction"></a>
+
 ## 3. Feature 추출
 
 2장에서 정리한 마지막 질문, 즉 고장에 가까워질수록 feature가 실제로 변하는지 확인하려면 먼저 feature를 정의해야 한다. 한 파일은 약 20,480개의 진동 숫자라 그대로 모델에 넣기에는 길고 노이즈가 많다. 그래서 각 파일을 통계/신호처리 공식으로 요약한 값들로 바꿨다.
@@ -108,6 +130,8 @@ RUL 정답을 어떻게 만들 것인가
 ![2nd_bearing1 feature trends](assets/feature_trends_2nd_bearing1.png)
 
 초반에는 RMS와 FFT power가 비교적 안정적이고, 고장에 가까운 후반부에서 feature 변화가 커진다. 즉 고장 진행에 따라 feature가 변하므로, 이 데이터를 RUL 예측 문제로 접근해볼 수 있다고 판단했다.
+
+<a id="rul-labeling"></a>
 
 ## 4. RUL 라벨 생성
 
@@ -147,6 +171,8 @@ rul_capped_125 = min(rul_step, 125)
 
 따라서 `rul_capped_125`는 고장까지 충분히 많이 남은 구간은 모두 125로 보고, 마지막 125 step에서 감소하는 패턴을 학습하게 만든 label이다. 이 값은 실제 시간 단위 RUL이 아니라 capped RUL step이다.
 
+<a id="data-split"></a>
+
 ## 5. 데이터 선택과 실험 분리
 
 이번 실험에서는 최종 고장이 보고된 베어링만 사용했다.
@@ -184,6 +210,8 @@ test:
 
 `features_combined.csv` 안에는 `2nd_bearing1`도 들어 있지만, 학습 코드에서 `test_df`로 분리되므로 모델 학습에는 사용되지 않는다. 즉 모델은 `2nd_bearing1`을 처음 보는 실험으로 두고 RUL을 예측한다.
 
+<a id="baseline-models"></a>
+
 ## 6. 비교 기준 모델
 
 딥러닝 모델을 바로 평가하면 성능의 의미를 판단하기 어렵다. 그래서 먼저 [baseline, 즉 비교 기준 모델](https://changjinpark.github.io/ims-bearing-rul-prediction/concepts.html#concept-baseline-models)을 만들었다. 여기서 baseline은 최종 모델이 좋은지 나쁜지 판단하기 위한 기준이라는 뜻이다.
@@ -215,6 +243,8 @@ MLPRegressor:
 
 RandomForest는 feature 기반 비교 모델 중 가장 좋은 성능을 보였다. 반면 MLP는 단일 시점 feature만으로는 RandomForest보다 낮은 성능을 보였다.
 
+<a id="sequence-models"></a>
+
 ## 7. PyTorch GRU와 LSTM 모델
 
 위 비교 기준 모델들은 각 시점의 feature 한 줄만 보고 RUL을 예측한다.
@@ -245,6 +275,8 @@ PyTorch의 `nn.GRU`와 `nn.LSTM`을 사용했고, train sequence 중 일부를 v
 
 GRU와 LSTM은 둘 다 시계열 흐름을 다루는 딥러닝 모델이다. LSTM은 오래 전 정보를 기억하기 위한 cell state 구조를 가지고 있고, GRU는 그 구조를 조금 단순화한 모델이다. 이 프로젝트에서는 두 모델이 같은 feature CSV, 같은 train/test split, 같은 `window_size = 30` 조건에서 비교되도록 만들었다.
 
+<a id="results"></a>
+
 ## 8. 최종 결과
 
 같은 `by_experiment` split에서 모델 성능을 비교하면 다음과 같다.
@@ -273,6 +305,8 @@ PyTorch GRU가 가장 좋은 결과를 보였고, LSTM도 RandomForest보다 낮
 
 ![PyTorch LSTM training loss](assets/lstm_torch_training_loss.png)
 
+<a id="limitations"></a>
+
 ## 9. 한계
 
 이번 결과를 실제 산업 현장 성능으로 바로 해석하면 안 된다. 이유는 다음과 같다.
@@ -284,6 +318,8 @@ PyTorch GRU가 가장 좋은 결과를 보였고, LSTM도 RandomForest보다 낮
 - Random split 성능은 데이터 누수 가능성이 있으므로 최종 성능으로 보면 안 된다.
 
 따라서 이 프로젝트는 “IMS Bearing Data를 RUL 예측 문제로 구성하고, feature 기반 비교 모델과 sequence 기반 GRU/LSTM을 비교한 과제 실험”으로 해석하는 것이 적절하다.
+
+<a id="future-work"></a>
 
 ## 10. 성능 개선 방향
 
@@ -309,6 +345,8 @@ PyTorch GRU가 가장 좋은 결과를 보였고, LSTM도 RandomForest보다 낮
 
 이번 과제에서는 난이도와 설명 가능성을 고려해 원본 신호를 바로 딥러닝에 넣는 방식은 사용하지 않았다. 대신 통계/신호처리 feature를 먼저 만들고, 그 feature 흐름을 GRU/LSTM에 넣는 방식으로 접근했다. 이 방식은 성능 최고점을 노리는 접근이라기보다, 데이터 구조와 RUL 라벨링 과정을 이해하기 좋은 접근이다.
 
+<a id="environment"></a>
+
 ## 11. 실행 환경
 
 실행 환경에 따라 학습 시간이나 세부 결과가 조금 달라질 수 있다. 특히 PyTorch 모델은 random seed, CPU/GPU 사용 여부, 라이브러리 버전에 영향을 받을 수 있다.
@@ -329,6 +367,8 @@ torch: 2.12.0
 
 코드에서는 재현성을 위해 `random_state=42`와 PyTorch seed를 설정했다. 다만 딥러닝 학습은 실행 환경에 따라 소수점 단위 결과가 완전히 같지 않을 수 있다.
 
+<a id="conclusion"></a>
+
 ## 12. 결론
 
 이번 프로젝트를 통해 다음을 확인했다.
@@ -342,6 +382,8 @@ torch: 2.12.0
 ```
 
 최종적으로 PyTorch GRU는 `by_experiment` 평가에서 MAE 4.53, RMSE 13.36, R2 0.713을 기록했다. PyTorch LSTM은 MAE 4.68, RMSE 14.38, R2 0.668을 기록했다. 이 결과는 고장에 가까워지는 feature의 시간적 변화가 RUL 예측에 의미 있는 정보를 제공할 수 있음을 보여준다.
+
+<a id="code"></a>
 
 ## 13. 코드
 
