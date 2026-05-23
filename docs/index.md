@@ -1,4 +1,5 @@
 ---
+layout: default
 title: IMS Bearing Data로 RUL 예측하기
 ---
 

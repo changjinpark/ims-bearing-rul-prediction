@@ -1,4 +1,5 @@
 ---
+layout: default
 title: 기초 개념 설명
 ---
 
