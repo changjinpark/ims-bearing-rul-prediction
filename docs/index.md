@@ -11,6 +11,8 @@ title: IMS Bearing Data로 RUL 예측하기
 
 용어가 낯설면 링크가 걸린 첫 등장 용어를 눌러 개념 설명을 확인하면 된다.
 
+전체 소스 코드는 [GitHub 저장소](https://github.com/changjinpark/ims-bearing-rul-prediction)에서 확인할 수 있다.
+
 ## 1. 문제 정의
 
 IMS Bearing Data는 베어링을 고장 날 때까지 운전하며 진동을 측정한 test-to-failure 데이터다. 일반적인 표 형태 데이터처럼 처음부터 “정답 라벨”이 깔끔하게 주어지는 구조가 아니다.
@@ -339,21 +341,14 @@ torch: 2.12.0
 
 주요 코드는 다음 파일에 정리했다.
 
-```text
-src/01_make_features.py
-원본 진동 파일을 feature CSV와 EDA 그래프로 변환
+전체 프로젝트 저장소: [github.com/changjinpark/ims-bearing-rul-prediction](https://github.com/changjinpark/ims-bearing-rul-prediction)
 
-src/02_train_baseline.py
-Dummy, RandomForest, MLP baseline 학습
-
-src/03_train_gru_torch.py
-PyTorch nn.GRU 기반 sequence 모델 학습
-
-src/04_train_lstm_torch.py
-PyTorch nn.LSTM 기반 sequence 모델 학습
-
-src/05_compare_model_predictions.py
-baseline, GRU, LSTM 예측선을 한 장의 그래프로 비교
-```
+| 파일 | 역할 |
+|---|---|
+| [`src/01_make_features.py`](https://github.com/changjinpark/ims-bearing-rul-prediction/blob/main/src/01_make_features.py) | 원본 진동 파일을 feature CSV와 EDA 그래프로 변환 |
+| [`src/02_train_baseline.py`](https://github.com/changjinpark/ims-bearing-rul-prediction/blob/main/src/02_train_baseline.py) | Dummy, RandomForest, MLP baseline 학습 |
+| [`src/03_train_gru_torch.py`](https://github.com/changjinpark/ims-bearing-rul-prediction/blob/main/src/03_train_gru_torch.py) | PyTorch nn.GRU 기반 sequence 모델 학습 |
+| [`src/04_train_lstm_torch.py`](https://github.com/changjinpark/ims-bearing-rul-prediction/blob/main/src/04_train_lstm_torch.py) | PyTorch nn.LSTM 기반 sequence 모델 학습 |
+| [`src/05_compare_model_predictions.py`](https://github.com/changjinpark/ims-bearing-rul-prediction/blob/main/src/05_compare_model_predictions.py) | baseline, GRU, LSTM 예측선을 한 장의 그래프로 비교 |
 
 실행 방법과 라이브러리 범위는 `requirements.txt`에 정리했다.
