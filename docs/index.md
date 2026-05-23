@@ -121,9 +121,7 @@ RUL 정답을 어떻게 만들 것인가
 - 상태 지표 feature: [crest factor](https://changjinpark.github.io/ims-bearing-rul-prediction/concepts.html#concept-crest-factor), impulse factor, shape factor
 - 주파수 영역 feature: FFT total power, dominant frequency, spectral centroid, band energy
 
-여기서 feature는 딥러닝 모델이 학습 과정에서 자동으로 만든 값이 아니라, 사전에 정의한 공식으로 원본 진동 신호를 요약한 값이다.
-
-예를 들어 RMS는 전체 진동 크기를 나타내고, kurtosis는 갑자기 튀는 충격성 정도를 나타낸다. FFT는 시간 기준 진동 신호를 주파수 기준으로 바꿔서 특정 주파수 대역의 에너지를 볼 수 있게 해준다.
+여기서 feature는 원본 파일의 20,480개 진동 숫자를 모델이 보기 쉬운 대표 숫자로 압축한 값이다. 코드에서는 각 파일을 읽고, 사용할 베어링 채널을 고르거나 두 방향 채널을 하나의 진동 크기로 합친 뒤, 같은 변환 함수를 적용해 RMS, kurtosis, crest factor, FFT band energy 등을 feature table의 한 행으로 저장했다.
 
 아래 그림은 `2nd_bearing1`의 주요 feature가 시간에 따라 어떻게 변하는지 보여준다. 여기서 `2nd_bearing1`은 `2nd_test` 실험의 bearing 1을 뜻하며, 5장에서 다시 데이터 선택 기준을 설명한다.
 
@@ -400,3 +398,5 @@ torch: 2.12.0
 | [`src/05_compare_model_predictions.py`](https://github.com/changjinpark/ims-bearing-rul-prediction/blob/main/src/05_compare_model_predictions.py) | baseline, GRU, LSTM 예측선을 한 장의 그래프로 비교 |
 
 실행 방법과 라이브러리 범위는 `requirements.txt`에 정리했다.
+
+Feature CSV, 모델 파일, 전체 실행 산출물은 `artifacts/` 아래에 생성된다. 이 파일들은 원본 데이터에서 다시 만들 수 있는 중간/결과 산출물이므로 GitHub에는 포함하지 않았고, 블로그에 필요한 결과 이미지만 `docs/assets/`에 넣었다.
