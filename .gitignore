@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Raw Kaggle data and archives should be downloaded locally, not committed.
+archive/
+*.zip
+
+# Legacy/generated experiment outputs. Recreate these with the scripts.
+outputs/
+outputs_all/
+artifacts/
+
+# Keep the small blog images copied into docs/assets instead.
+!docs/
+!docs/assets/
